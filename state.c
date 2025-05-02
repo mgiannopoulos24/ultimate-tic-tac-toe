@@ -106,25 +106,30 @@ void print_small_board(small_board sb) {
 
 /*  UNDER PROGRESS  */
 void print_big_board(big_board bb) {
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            for (int z = 0; z < 3; z++) {
-                printf(" %c ", bb->small_board[i][z]->sb->board[i][z]);
-                if (j < 2) {
-                    printf("|");
-                } else {
-                    printf("   ");
+    for (int k = 0; k < 3; k++) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                for (int z = 0; z < 3; z++) {
+                    printf(" %c ", bb->smallBoards[i][j]->board[j][z]);
+                    if (z < 2) {
+                        printf("|");
+                    } else {
+                        printf("   ");
+                    }
                 }
             }
+                
             printf("\n");
             if (i < 2) {
-                printf("---|---|---  \n");
+                printf("---|---|---   ---|---|---   ---|---|---   \n");
             } else {
                 printf("  \n");
             }
-            printf("\n");  
-        } 
+        }
+
     }
+
+    
 }
 
 /**

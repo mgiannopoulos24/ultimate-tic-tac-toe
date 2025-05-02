@@ -58,4 +58,8 @@ void destroy_big_board(big_board bb);
 
 void play_move(big_board, int, int, int, int);
 
+board_status detect_sb(small_board);
+
+board_status detect_bb(big_board);
+
 #endif
