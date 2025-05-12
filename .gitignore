@@ -1,5 +1,5 @@
-#object
-.o
+# Object files
+*.o
 
-#executable
+# Executable files
 game
