@@ -103,26 +103,26 @@ void print_game() {
 
 
         if (sb_status != IN_PROGRESS) {
-            bb->smallBoards[i][j]->last_played->x = -1;
-            bb->smallBoards[i][j]->last_played->y = -1;
+            //bb->smallBoards[i][j]->last_played->x = -1;
+            //bb->smallBoards[i][j]->last_played->y = -1;
 
             bb->smallBoards[i][j]->status = sb_status;
 
             if (sb_status != DRAW) {
 
-                board_status bb_status = detect_bb(bb);
+                board_status sb_status = detect_bb(bb);
 
-                if (bb_status == X_WON) {
+                if (sb_status == X_WON) {
                     printf("PLAYER X WON!!!\n");
                     bb->status = OVER;
                     return;
 
-                } else if (bb_status == O_WON) {
+                } else if (sb_status == O_WON) {
                     printf("PLAYER O WON!!!\n");
                     bb->status = OVER;
                     return;
 
-                } else if (bb_status == DRAW) {
+                } else if (sb_status == DRAW) {
                     printf("DRAW!!! :(\n");
                     bb->status = OVER;
                     return;

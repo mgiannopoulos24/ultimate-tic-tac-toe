@@ -103,32 +103,31 @@ void print_small_board(small_board sb) {
  * @param bb the big board to print
  * @note The big board is printed in a 3x3 grid format, with each small board printed in its place.
 */
-
-/*  UNDER PROGRESS  */
 void print_big_board(big_board bb) {
-    for (int k = 0; k < 3; k++) {
-        for (int i = 0; i < 3; i++) {
+    for (int u = 0; u < 3; u++) {
+        for (int k = 0; k < 3; k++) {
             for (int j = 0; j < 3; j++) {
-                for (int z = 0; z < 3; z++) {
-                    printf(" %c ", bb->smallBoards[i][j]->board[j][z]);
-                    if (z < 2) {
+                for (int i = 0; i < 3; i++) {
+                    printf(" %c ", bb->smallBoards[u][j]->board[k][i]);
+
+                    if (i < 2) {
                         printf("|");
                     } else {
                         printf("   ");
                     }
+                
                 }
             }
-                
+
             printf("\n");
-            if (i < 2) {
+            if (k < 2) {
                 printf("---|---|---   ---|---|---   ---|---|---   \n");
             } else {
                 printf("  \n");
             }
+
         }
-
     }
-
     
 }
 
@@ -175,7 +174,7 @@ void play_move(big_board bb, int i, int j, int x, int y) {
         return;
     }
 
-    if (bb->smallBoards[i][j]->status != IN_PROGRESS) {
+    if (bb->smallBoards[i][j]->status != IN_PROGRESS && bb->smallBoards[i][j]->status != BOARD_START) {
         fprintf(stderr, "Small board is already finished.\n");
         return;
     }
@@ -185,6 +184,8 @@ void play_move(big_board bb, int i, int j, int x, int y) {
     } else {
         fprintf(stderr, "Already filled spot.\n");
     }
+
+    if (bb->status == START) bb->status = PLAYING;
 }
 
 board_status detect_sb(small_board sb) {
