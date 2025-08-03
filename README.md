@@ -32,5 +32,10 @@ docker run -it -p 8000:8000 ultimate-tac-tac-toe
 5. **Open Your Browser:**
 Navigate to `http://localhost:8000` to play the game.
 
+Or if you prefer the terminal version, you can run:
+```bash
+make
+```
+
 ## Contributing
 Contributions are welcome! Please fork the repository and submit a pull request with your changes.

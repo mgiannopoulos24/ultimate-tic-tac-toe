@@ -1,113 +1,145 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <emscripten.h>
 #include "state.h"
 
+
+// set it as global
 big_board bb;
-int next_board_i = -1;
-int next_board_j = -1;
 
-// Helper function to call JS to update the status text
-void update_status_js() {
-    char js_code[256];
-    if (bb->status == OVER) {
-        // Final win/loss/draw message is handled by detect_bb
-        return;
-    }
+void print_game() {
+    while (1) {
+        printf("\r");
+        printf("                   _ _   _                 _                  \n");
+        printf("             _   _| | |_(_)_ __ ___   __ _| |_ ___            \n");
+        printf("            | | | | | __| | '_ ` _ \\ / _` | __/ _ \\           \n");
+        printf("            | |_| | | |_| | | | | | | (_| | ||  __/           \n");
+        printf("  _   _      \\__,_|_|\\__|_|_| |_| |_|\\__,_|\\__\\___|           \n");
+        printf(" | |_(_) ___          | |_ __ _  ___          | |_ ___   ___  \n");
+        printf(" | __| |/ __|  _____  | __/ _` |/ __|  _____  | __/ _ \\ / _ \\ \n");
+        printf(" | |_| | (__  |_____| | || (_| | (__  |_____| | || (_) |  __/ \n");
+        printf("  \\__|_|\\___|          \\__\\__,_|\\___|          \\__\\___/ \\___| \n");
+        printf("\n");
+        printf("---------------------------------------------------------------\n");
+        printf("     0             1             2       \n");
 
-    if (next_board_i == -1) {
-        sprintf(js_code, "window.updateStatus('Player %c turn. Choose any valid board.');", (bb->currentPlayer == PLAYER_X) ? 'X' : 'O');
-    } else {
-        sprintf(js_code, "window.updateStatus('Player %c turn. Play in board (%d, %d).');", (bb->currentPlayer == PLAYER_X) ? 'X' : 'O', next_board_i, next_board_j);
-    }
-    emscripten_run_script(js_code);
-}
+        print_big_board(bb);
 
 
-// This function is called from JS when a user clicks a cell
-EMSCRIPTEN_KEEPALIVE
-void process_move(int i, int j, int x, int y) {
-    if (bb->status == OVER) return;
+        printf("---------------------------------------------------------------\n");
+        printf("Current Player: %s\n", (bb->currentPlayer == PLAYER_X) ? "X" : "O");
 
-    // --- Move Validation ---
-    if (next_board_i != -1 && (i != next_board_i || j != next_board_j)) {
-        emscripten_run_script("window.updateStatus('Invalid move: Must play in the highlighted board.');");
-        return;
-    }
-    if (bb->smallBoards[i][j]->status != BOARD_START && bb->smallBoards[i][j]->status != IN_PROGRESS) {
-        emscripten_run_script("window.updateStatus('Invalid move: This board is already finished.');");
-        return;
-    }
-    if (bb->smallBoards[i][j]->board[x][y] != ' ') {
-        emscripten_run_script("window.updateStatus('Invalid move: That cell is already taken.');");
-        return;
-    }
+        int x, y, i, j;
 
-    // --- Play Move & Update UI ---
-    play_move(bb, i, j, x, y);
-    char js_code[128];
-    sprintf(js_code, "window.updateCell(%d, %d, %d, %d, %d);", i, j, x, y, bb->currentPlayer);
-    emscripten_run_script(js_code);
+        if (bb->status == START) {
+            printf("Choose board to start playing: <x> <y>\n");
+            
+            scanf("%d %d", &i, &j);
 
-    bb->last_played->x = i;
-    bb->last_played->y = j;
-    bb->smallBoards[i][j]->last_played->x = x;
-    bb->smallBoards[i][j]->last_played->y = y;
-    if(bb->smallBoards[i][j]->status == BOARD_START) {
-        bb->smallBoards[i][j]->status = IN_PROGRESS;
-    }
+            if (i < 0 || i > 2 || j < 0 || j > 2) {
+                fprintf(stderr, "Invalid coordinate(s).\n");
+                return;
+            }
 
-    // --- Check for Small Board Win/Draw ---
-    board_status sb_status = detect_sb(bb->smallBoards[i][j]);
-    if (sb_status != IN_PROGRESS) {
-        bb->smallBoards[i][j]->status = sb_status;
-        sprintf(js_code, "window.markSmallBoardFinished(%d, %d, %d);", i, j, sb_status);
-        emscripten_run_script(js_code);
+            printf("Insert your move: <x> <y> \n");
 
-        // --- Check for Overall Game Win/Draw ---
-        board_status bb_status = detect_bb(bb);
-        if (bb_status != IN_PROGRESS) {
-            bb->status = OVER;
-            if (bb_status == X_WON) sprintf(js_code, "window.updateStatus('GAME OVER: Player X Wins!');");
-            else if (bb_status == O_WON) sprintf(js_code, "window.updateStatus('GAME OVER: Player O Wins!');");
-            else if (bb_status == DRAW) sprintf(js_code, "window.updateStatus('GAME OVER: It is a Draw!');");
-            emscripten_run_script(js_code);
+            scanf("%d %d", &x, &y);
+                
+            if (x < 0 || x > 2 || y < 0 || y > 2) {
+                fprintf(stderr, "Invalid coordinate(s).\n");
+                return;
+            }
+
+        } else {
+            i = bb->smallBoards[bb->last_played->x][bb->last_played->y]->last_played->x;
+            j = bb->smallBoards[bb->last_played->x][bb->last_played->y]->last_played->y;
+
+            if (i == -1 && j == -1) {
+                printf("Current Board: Whichever (in progress) board you want! \n");
+                printf("Give board you want to play at: <x> <y> \n");
+                scanf("%d %d", &i, &j);
+
+                if (i < 0 || i > 2 || j < 0 || j > 2) {
+                    fprintf(stderr, "Invalid coordinate(s).\n");
+                    return;
+                }
+
+                if (bb->smallBoards[i][j]->status != IN_PROGRESS) {
+                    fprintf(stderr, "Board is already finished.\n");
+                    return;
+                }
+
+                printf("Insert your move: <x> <y> \n");
+
+                scanf("%d %d", &x, &y);
+                
+                if (x < 0 || x > 2 || y < 0 || y > 2) {
+                    fprintf(stderr, "Invalid coordinate(s).\n");
+                    return;
+                }
+
+            } else {
+                printf("Current Board: (%d, %d)\n", bb->smallBoards[bb->last_played->x][bb->last_played->y]->last_played->x, bb->smallBoards[bb->last_played->x][bb->last_played->y]->last_played->y);
+                printf("Insert your move: <x> <y> \n");
+
+                scanf("%d %d", &x, &y);
+                
+                if (x < 0 || x > 2 || y < 0 || y > 2) {
+                    fprintf(stderr, "Invalid coordinate(s).\n");
+                    return;
+                }
+            }
+
         }
-    }
 
-    // --- Determine Next Board & Switch Player ---
-    if (bb->status != OVER) {
-        next_board_i = x;
-        next_board_j = y;
+        play_move(bb, i, j, x, y);
 
-        if (bb->smallBoards[next_board_i][next_board_j]->status != BOARD_START && bb->smallBoards[next_board_i][next_board_j]->status != IN_PROGRESS) {
-            next_board_i = -1;
-            next_board_j = -1;
+        bb->last_played->x = i;
+        bb->last_played->y = j;
+
+        bb->smallBoards[i][j]->last_played->x = x;
+        bb->smallBoards[i][j]->last_played->y = y;
+
+        board_status sb_status = detect_sb(bb->smallBoards[i][j]);
+
+
+        if (sb_status != IN_PROGRESS) {
+            //bb->smallBoards[i][j]->last_played->x = -1;
+            //bb->smallBoards[i][j]->last_played->y = -1;
+
+            bb->smallBoards[i][j]->status = sb_status;
+
+            if (sb_status != DRAW) {
+
+                board_status sb_status = detect_bb(bb);
+
+                if (sb_status == X_WON) {
+                    printf("PLAYER X WON!!!\n");
+                    bb->status = OVER;
+                    return;
+
+                } else if (sb_status == O_WON) {
+                    printf("PLAYER O WON!!!\n");
+                    bb->status = OVER;
+                    return;
+
+                } else if (sb_status == DRAW) {
+                    printf("DRAW!!! :(\n");
+                    bb->status = OVER;
+                    return;
+                }
+            }
+
         }
-        
-        // Highlight the next board on the UI
-        sprintf(js_code, "window.highlightNextBoard(%d, %d);", next_board_i, next_board_j);
-        emscripten_run_script(js_code);
 
-        bb->currentPlayer = (bb->currentPlayer == PLAYER_X) ? PLAYER_O : PLAYER_X;
-        update_status_js();
+        bb->currentPlayer = !(bb->currentPlayer);
     }
-}
 
-// This function is called once from JS when the page loads
-EMSCRIPTEN_KEEPALIVE
-void initialize_game() {
-    bb = create_big_board();
-    bb->currentPlayer = PLAYER_X;
-    next_board_i = -1;
-    next_board_j = -1;
-
-    // Set initial status message and highlight
-    update_status_js();
-    emscripten_run_script("window.highlightNextBoard(-1, -1);");
 }
 
 int main() {
-    // All logic is initiated from JavaScript.
+    bb = create_big_board();
+
+    print_game();
+    
     return 0;
 }

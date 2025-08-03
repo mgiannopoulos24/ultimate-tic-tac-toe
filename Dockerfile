@@ -2,7 +2,9 @@ FROM emscripten/emsdk
 
 WORKDIR /app
 
-COPY src/ ./src/
+COPY src/main_web.c ./src/
+COPY src/state.c ./src/
+COPY include/state.h ./src
 COPY public/ ./public/
 
 # Compile the C code.
